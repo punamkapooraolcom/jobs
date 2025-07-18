@@ -1,0 +1,29 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Skills: Allow anyone to read the list of skills.
+    match /skills/{skillId} {
+      allow read;
+    }
+
+    // Users: Allow users to read profiles, and create/update their own profile.
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth.uid == userId;
+    }
+
+    // Swipes: Allow users to create their own swipe documents.
+    // Reading swipes is handled by server-side logic for checking matches.
+    match /swipes/{swipeId} {
+      allow create: if request.auth.uid == request.resource.data.swiperUid;
+    }
+
+    // Notifications: Deny all client-side reads/writes.
+    // Handled by server-side logic to protect privacy.
+    match /notifications/{notificationId} {
+      allow read, write: if false;
+    }
+  }
+}
